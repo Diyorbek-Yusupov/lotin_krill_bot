@@ -1,5 +1,5 @@
 import { Bot, InlineKeyboard, Keyboard } from "grammy";
-import { setUserMode } from "./storage";
+import { setUserMode, getUserMode } from "./storage";
 import { latinToCyrillic, cyrillicToLatin } from "./utils/converter";
 import { MyContext } from "./types";
 
@@ -12,12 +12,21 @@ export function registerHandlers(bot: Bot<MyContext>) {
   // /start command
   bot.command("start", async (ctx) => {
     try {
+      if (!ctx.from?.id) {
+        await ctx.reply("Kechirasiz, foydalanuvchi ID raqamingizni aniqlay olmadim.");
+        return;
+      }
+
+      // Check existing mode
+      const existingMode = await getUserMode(bot, ctx.from.id);
+      ctx.session.mode = existingMode;  // Sync session with storage
+
       const inlineKeyboard = new InlineKeyboard()
         .text("Lotin → Kirill", "set_lc")
         .text("Kirill → Lotin", "set_cl");
 
       // Include a welcome message for new users
-      const welcomeMsg = ctx.session.mode
+      const welcomeMsg = existingMode
         ? "Yangi rejimni tanlang:"
         : "Assalomu alaykum! 👋 Konvertatsiya rejimini tanlang:";
 
