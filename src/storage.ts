@@ -1,42 +1,40 @@
-import fs from "fs";
-import path from "path";
-import { Mode } from "./types";
+import { Bot } from "grammy";
+import { CHANNEL_ID } from "./config";
+import { Mode, MyContext } from "./types";
 
-interface UserModeMap {
-  [userId: string]: Mode;
+interface StorageData {
+  userId: number;
+  mode: Mode;
+  timestamp: number;
 }
 
-const storageFile = path.join(__dirname, "../user_modes.json");
+// Save user mode to channel
+export async function setUserMode(
+  bot: Bot<MyContext>,
+  userId: number,
+  mode: Mode
+) {
+  const data: StorageData = {
+    userId,
+    mode,
+    timestamp: Date.now(),
+  };
 
-let userModes: UserModeMap = {};
-
-// Load data from file on startup
-export function loadData() {
-  if (fs.existsSync(storageFile)) {
-    try {
-      const raw = fs.readFileSync(storageFile, "utf-8");
-      userModes = JSON.parse(raw);
-    } catch (err) {
-      console.error("❌ Failed to load storage file", err);
-      userModes = {};
-    }
-  }
-}
-
-// Save data to file
-function saveData() {
   try {
-    fs.writeFileSync(storageFile, JSON.stringify(userModes, null, 2), "utf-8");
+    await bot.api.sendMessage(CHANNEL_ID, JSON.stringify(data));
   } catch (err) {
-    console.error("❌ Failed to save storage file", err);
+    console.error("❌ Failed to save user mode to channel:", err);
+    throw err;
   }
 }
 
-export function getUserMode(userId: number): Mode {
-  return userModes[userId] || null;
-}
-
-export function setUserMode(userId: number, mode: Mode) {
-  userModes[userId] = mode;
-  saveData();
+// Initialize bot by loading previous settings
+export async function initializeBot(bot: Bot<MyContext>) {
+  try {
+    console.log("🤖 Initializing bot...");
+    // No need to add message handler here as it's handled in handlers.ts
+    return;
+  } catch (err) {
+    console.error("❌ Failed to initialize bot with storage:", err);
+  }
 }

@@ -1,8 +1,13 @@
-import { bot } from "./bot";
-import { loadData } from "./storage";
+import { createBot } from "./bot";
 
-// Load stored modes before bot starts
-loadData();
+async function main() {
+  try {
+    const bot = await createBot();
+    await bot.start();
+  } catch (error) {
+    console.error("❌ Error starting bot:", error);
+    process.exit(1);
+  }
+}
 
-bot.start();
-console.log("🤖 Bot is running...");
+main();
