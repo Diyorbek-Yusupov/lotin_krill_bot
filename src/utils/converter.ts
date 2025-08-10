@@ -43,6 +43,12 @@ export function latinToCyrillic(text: string): string {
     [/o['’ʻ`‘]/gi, (m: string) => (m[0] === "O" ? "Ў" : "ў")],
     [/g['’ʻ`‘]/gi, (m: string) => (m[0] === "G" ? "Ғ" : "ғ")],
 
+    // Stop sign (glottal stop) represented by various apostrophes, converted to hard sign.
+    [
+      /(\p{L})(['’ʻ`‘])(?=\p{L})/gu,
+      (match, p1: string) => p1 + (p1.toUpperCase() === p1 ? "Ъ" : "ъ"),
+    ],
+
     //
     // === Context-sensitive 'e' rules ===
     //
@@ -87,9 +93,6 @@ export function latinToCyrillic(text: string): string {
     [/x/gi, (m: string) => (m === "X" ? "Х" : "х")],
     [/y/gi, (m: string) => (m === "Y" ? "Й" : "й")], // For 'y' not in 'yo', 'yu', 'ya'
     [/z/gi, (m: string) => (m === "Z" ? "З" : "з")],
-
-    // Stop sign (glottal stop) represented by various apostrophes, converted to hard sign.
-    [/['’ʻ`‘]/gi, "ъ"],
   ];
 
   let output = text;
@@ -162,6 +165,8 @@ export function cyrillicToLatin(text: string): string {
     [/ғ/g, "g'"],
     [/Э/g, "E"], // 'э' always corresponds to 'e'
     [/э/g, "e"],
+    [/Ъ/g, "'"],
+    [/ъ/g, "'"],
 
     // Standard single letters
     [/А/g, "A"],
