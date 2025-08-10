@@ -87,6 +87,9 @@ export function latinToCyrillic(text: string): string {
     [/x/gi, (m: string) => (m === "X" ? "Х" : "х")],
     [/y/gi, (m: string) => (m === "Y" ? "Й" : "й")], // For 'y' not in 'yo', 'yu', 'ya'
     [/z/gi, (m: string) => (m === "Z" ? "З" : "з")],
+
+    // Stop sign (glottal stop) represented by various apostrophes, converted to hard sign.
+    [/['’ʻ`‘]/gi, "ъ"],
   ];
 
   let output = text;
@@ -109,10 +112,10 @@ export function cyrillicToLatin(text: string): string {
     // Before other replacements, convert 'е' to 'ye' at the start of a word or after a vowel.
     // This prevents incorrect transformations like 'Куеш' instead of 'Quyosh'.
     // `\b` is a word boundary. The vowel list includes all Cyrillic vowels.
-    [/\bЕ/g, 'Ye'],
-    [/\bе/g, 'ye'],
-    [/([АаЕеЁёИиОоУуЎўЭэЮюЯя])Е/g, '$1Ye'],
-    [/([АаЕеЁёИиОоУуЎўЭэЮюЯя])е/g, '$1ye'],
+    [/\bЕ/g, "Ye"],
+    [/\bе/g, "ye"],
+    [/([АаЕеЁёИиОоУуЎўЭэЮюЯя])Е/g, "$1Ye"],
+    [/([АаЕеЁёИиОоУуЎўЭэЮюЯя])е/g, "$1ye"],
 
     //
     // === Multi-character replacements ===
@@ -120,34 +123,34 @@ export function cyrillicToLatin(text: string): string {
 
     // Handle ALL-CAPS digraphs by checking if the next letter is also uppercase.
     // e.g., 'ШЕР' -> 'SHER'. The lookahead `(?=[А-ЯЁЎҒҲ])` checks for an upcoming capital letter.
-    [/Ц(?=[А-ЯЁЎҒҲ])/g, 'TS'],
-    [/Ч(?=[А-ЯЁЎҒҲ])/g, 'CH'],
-    [/Ш(?=[А-ЯЁЎҒҲ])/g, 'SH'],
-    [/Ё(?=[А-ЯЁЎҒҲ])/g, 'YO'],
-    [/Ю(?=[А-ЯЁЎҒҲ])/g, 'YU'],
-    [/Я(?=[А-ЯЁЎҒҲ])/g, 'YA'],
-    
+    [/Ц(?=[А-ЯЁЎҒҲ])/g, "TS"],
+    [/Ч(?=[А-ЯЁЎҒҲ])/g, "CH"],
+    [/Ш(?=[А-ЯЁЎҒҲ])/g, "SH"],
+    [/Ё(?=[А-ЯЁЎҒҲ])/g, "YO"],
+    [/Ю(?=[А-ЯЁЎҒҲ])/g, "YU"],
+    [/Я(?=[А-ЯЁЎҒҲ])/g, "YA"],
+
     // Handle specific 'НГ' cases, which don't need a lookahead.
-    [/НГ/g, 'NG'],
-    [/Нг/g, 'Ng'],
+    [/НГ/g, "NG"],
+    [/Нг/g, "Ng"],
 
     // Handle Title-Case and single uppercase digraphs.
     // e.g., 'Шер' -> 'Sher', 'Ёр' -> 'Yor'
-    [/Ц/g, 'Ts'],
-    [/Ч/g, 'Ch'],
-    [/Ш/g, 'Sh'],
-    [/Ё/g, 'Yo'],
-    [/Ю/g, 'Yu'],
-    [/Я/g, 'Ya'],
+    [/Ц/g, "Ts"],
+    [/Ч/g, "Ch"],
+    [/Ш/g, "Sh"],
+    [/Ё/g, "Yo"],
+    [/Ю/g, "Yu"],
+    [/Я/g, "Ya"],
 
     // Handle lowercase digraphs.
-    [/ц/g, 'ts'],
-    [/ч/g, 'ch'],
-    [/ш/g, 'sh'],
-    [/ё/g, 'yo'],
-    [/ю/g, 'yu'],
-    [/я/g, 'ya'],
-    [/нг/g, 'ng'],
+    [/ц/g, "ts"],
+    [/ч/g, "ch"],
+    [/ш/g, "sh"],
+    [/ё/g, "yo"],
+    [/ю/g, "yu"],
+    [/я/g, "ya"],
+    [/нг/g, "ng"],
 
     //
     // === Single character replacements ===
@@ -157,34 +160,58 @@ export function cyrillicToLatin(text: string): string {
     [/ў/g, "o'"],
     [/Ғ/g, "G'"],
     [/ғ/g, "g'"],
-    [/Э/g, 'E'], // 'э' always corresponds to 'e'
-    [/э/g, 'e'],
+    [/Э/g, "E"], // 'э' always corresponds to 'e'
+    [/э/g, "e"],
 
     // Standard single letters
-    [/А/g, 'A'], [/а/g, 'a'],
-    [/Б/g, 'B'], [/б/g, 'b'],
-    [/Д/g, 'D'], [/д/g, 'd'],
-    [/Е/g, 'E'], [/е/g, 'e'], // Handles remaining 'е' (after consonants)
-    [/Ф/g, 'F'], [/ф/g, 'f'],
-    [/Г/g, 'G'], [/г/g, 'g'],
-    [/Ҳ/g, 'H'], [/ҳ/g, 'h'],
-    [/И/g, 'I'], [/и/g, 'i'],
-    [/Ж/g, 'J'], [/ж/g, 'j'],
-    [/К/g, 'K'], [/к/g, 'k'],
-    [/Л/g, 'L'], [/л/g, 'l'],
-    [/М/g, 'M'], [/м/g, 'm'],
-    [/Н/g, 'N'], [/н/g, 'n'],
-    [/О/g, 'O'], [/о/g, 'o'],
-    [/П/g, 'P'], [/п/g, 'p'],
-    [/Қ/g, 'Q'], [/қ/g, 'q'],
-    [/Р/g, 'R'], [/р/g, 'r'],
-    [/С/g, 'S'], [/с/g, 's'],
-    [/Т/g, 'T'], [/т/g, 't'],
-    [/У/g, 'U'], [/у/g, 'u'],
-    [/В/g, 'V'], [/в/g, 'v'],
-    [/Х/g, 'X'], [/х/g, 'x'],
-    [/Й/g, 'Y'], [/й/g, 'y'],
-    [/З/g, 'Z'], [/з/g, 'z'],
+    [/А/g, "A"],
+    [/а/g, "a"],
+    [/Б/g, "B"],
+    [/б/g, "b"],
+    [/Д/g, "D"],
+    [/д/g, "d"],
+    [/Е/g, "E"],
+    [/е/g, "e"], // Handles remaining 'е' (after consonants)
+    [/Ф/g, "F"],
+    [/ф/g, "f"],
+    [/Г/g, "G"],
+    [/г/g, "g"],
+    [/Ҳ/g, "H"],
+    [/ҳ/g, "h"],
+    [/И/g, "I"],
+    [/и/g, "i"],
+    [/Ж/g, "J"],
+    [/ж/g, "j"],
+    [/К/g, "K"],
+    [/к/g, "k"],
+    [/Л/g, "L"],
+    [/л/g, "l"],
+    [/М/g, "M"],
+    [/м/g, "m"],
+    [/Н/g, "N"],
+    [/н/g, "n"],
+    [/О/g, "O"],
+    [/о/g, "o"],
+    [/П/g, "P"],
+    [/п/g, "p"],
+    [/Қ/g, "Q"],
+    [/қ/g, "q"],
+    [/Р/g, "R"],
+    [/р/g, "r"],
+    [/С/g, "S"],
+    [/с/g, "s"],
+    [/Т/g, "T"],
+    [/т/g, "t"],
+    [/У/g, "U"],
+    [/у/g, "u"],
+    [/В/g, "V"],
+    [/в/g, "v"],
+    [/Х/g, "X"],
+    [/х/g, "x"],
+    [/Й/g, "Y"],
+    [/й/g, "y"],
+    [/З/g, "Z"],
+    [/з/g, "z"],
   ];
 
   let output = text;
