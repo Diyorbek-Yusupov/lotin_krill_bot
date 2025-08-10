@@ -102,6 +102,9 @@ export function latinToCyrillic(text: string): string {
   return output;
 }
 
+export const convertToLatin = cyrillicToLatin;
+export const convertToCyrillic = latinToCyrillic;
+
 export function cyrillicToLatin(text: string): string {
   /**
    * This map contains the rules for converting Uzbek Cyrillic script to Latin.

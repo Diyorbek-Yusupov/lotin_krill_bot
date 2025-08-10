@@ -9,6 +9,52 @@ export function registerHandlers(bot: Bot<MyContext>) {
     console.error("Error in bot handler:", err);
   });
 
+  // Handle inline queries
+  bot.on("inline_query", async (ctx) => {
+    const query = ctx.inlineQuery.query;
+
+    if (!query) {
+      await ctx.answerInlineQuery([
+        {
+          type: "article",
+          id: "help",
+          title: "So'zni kiriting",
+          description: "Lotin ↔️ Кирилл o'girish uchun so'z yozing",
+          input_message_content: {
+            message_text: "Lotin ↔️ Кирилл o'girish uchun so'z yozing",
+          },
+        },
+      ]);
+      return;
+    }
+
+    const latinResult = cyrillicToLatin(query);
+    const cyrillicResult = latinToCyrillic(query);
+
+    const results = [
+      {
+        type: "article",
+        id: "latin",
+        title: "Lotin 🔄",
+        description: latinResult,
+        input_message_content: {
+          message_text: latinResult,
+        }
+      },
+      {
+        type: "article",
+        id: "cyrillic",
+        title: "Кирилл 🔄",
+        description: cyrillicResult,
+        input_message_content: {
+          message_text: cyrillicResult,
+        }
+      },
+    ] as const;
+
+    await ctx.answerInlineQuery(results);
+  });
+
   // /start command
   bot.command("start", async (ctx) => {
     try {
