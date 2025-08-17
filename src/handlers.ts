@@ -39,7 +39,7 @@ export function registerHandlers(bot: Bot<MyContext>) {
         description: latinResult,
         input_message_content: {
           message_text: latinResult,
-        }
+        },
       },
       {
         type: "article",
@@ -48,7 +48,7 @@ export function registerHandlers(bot: Bot<MyContext>) {
         description: cyrillicResult,
         input_message_content: {
           message_text: cyrillicResult,
-        }
+        },
       },
     ] as const;
 
@@ -62,16 +62,26 @@ export function registerHandlers(bot: Bot<MyContext>) {
         return;
       }
 
-      const existingMode = await getUserMode(bot, ctx.from.id);  // Use bot parameter instead of ctx.bot
-      
+      const existingMode = await getUserMode(bot, ctx.from.id); // Use bot parameter instead of ctx.bot
+
       if (existingMode) {
         ctx.session.mode = existingMode;
-        const modeName = existingMode === "LATIN_TO_CYRILLIC" ? "Lotin → Kirill" : "Kirill → Lotin";
-        await ctx.reply(`Sizning joriy rejimingiz: ${modeName}\nMatn yuborishingiz mumkin!`, {
-          reply_markup: new Keyboard()
-            .text(existingMode === "LATIN_TO_CYRILLIC" ? "Lotincha yozishga o'tish ⇄" : "Kirillcha yozishga o'tish ⇄")
-            .resized()
-        });
+        const modeName =
+          existingMode === "LATIN_TO_CYRILLIC"
+            ? "Lotin → Kirill"
+            : "Kirill → Lotin";
+        await ctx.reply(
+          `Sizning joriy rejimingiz: ${modeName}\nMatn yuborishingiz mumkin!`,
+          {
+            reply_markup: new Keyboard()
+              .text(
+                existingMode === "LATIN_TO_CYRILLIC"
+                  ? "Lotincha yozishga o'tish ⇄"
+                  : "Kirillcha yozishga o'tish ⇄"
+              )
+              .resized(),
+          }
+        );
         return;
       }
 
@@ -164,16 +174,6 @@ export function registerHandlers(bot: Bot<MyContext>) {
     ["Lotincha yozishga o'tish ⇄", "Kirillcha yozishga o'tish ⇄"],
     async (ctx) => {
       try {
-        const currentMode = ctx.session.mode;
-
-        if (!currentMode) {
-          await ctx.reply(
-            "Iltimos, rejimni tanlash uchun /start buyrug'ini yuboring!"
-          );
-          return;
-        }
-
-        // Toggle the mode
         if (!ctx.from?.id) {
           await ctx.reply(
             "Kechirasiz, foydalanuvchi ID raqamingizni aniqlay olmadim."
@@ -181,25 +181,40 @@ export function registerHandlers(bot: Bot<MyContext>) {
           return;
         }
 
+        // Get current mode from storage if session is empty
+        let currentMode = ctx.session.mode;
+        if (!currentMode) {
+          currentMode = await getUserMode(bot, ctx.from.id);
+          if (!currentMode) {
+            await ctx.reply(
+              "Iltimos, rejimni tanlash uchun /start buyrug'ini yuboring!"
+            );
+            return;
+          }
+          ctx.session.mode = currentMode;
+        }
+
+        // Toggle mode based on button text
         const newMode =
-          currentMode === "LATIN_TO_CYRILLIC"
-            ? "CYRILLIC_TO_LATIN"
-            : "LATIN_TO_CYRILLIC";
+          ctx.message?.text === "Lotincha yozishga o'tish ⇄"
+            ? "CYRILLIC_TO_LATIN" // If user wants Latin, switch to C->L
+            : "LATIN_TO_CYRILLIC"; // If user wants Cyrillic, switch to L->C
+
         await setUserMode(bot, ctx.from.id, newMode);
         ctx.session.mode = newMode;
-
-        // Show mode change confirmation
-        const modeText =
-          newMode === "LATIN_TO_CYRILLIC" ? "Lotin → Kirill" : "Kirill → Lotin";
 
         // Set keyboard button text based on the new mode
         const replyKeyboard = new Keyboard()
           .text(
             newMode === "LATIN_TO_CYRILLIC"
-              ? "Lotincha yozishga o'tish ⇄"
-              : "Kirillcha yozishga o'tish ⇄"
+              ? "Lotincha yozishga o'tish ⇄" // Show Latin option when in L->C mode
+              : "Kirillcha yozishga o'tish ⇄" // Show Cyrillic option when in C->L mode
           )
           .resized();
+
+        // Show mode change confirmation
+        const modeText =
+          newMode === "LATIN_TO_CYRILLIC" ? "Lotin → Kirill" : "Kirill → Lotin";
 
         await ctx.reply(
           `Rejim o'zgartirildi: ${modeText} ✅\nEndi menga istalgan matnni yuborishingiz mumkin!`,
@@ -207,7 +222,7 @@ export function registerHandlers(bot: Bot<MyContext>) {
         );
       } catch (error) {
         console.error("Error toggling mode:", error);
-        await ctx.reply("Error changing mode. Please try again.");
+        await ctx.reply("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.");
       }
     }
   );
@@ -225,7 +240,7 @@ export function registerHandlers(bot: Bot<MyContext>) {
       // Get mode from storage if session is empty
       let mode = ctx.session.mode;
       if (!mode) {
-        mode = await getUserMode(bot, ctx.from.id);  // Use bot parameter instead of ctx.bot
+        mode = await getUserMode(bot, ctx.from.id); // Use bot parameter instead of ctx.bot
         if (mode) {
           ctx.session.mode = mode;
         }
@@ -242,14 +257,17 @@ export function registerHandlers(bot: Bot<MyContext>) {
         return;
       }
 
-      const converted = mode === "LATIN_TO_CYRILLIC"
-        ? latinToCyrillic(ctx.message.text)
-        : cyrillicToLatin(ctx.message.text);
+      const converted =
+        mode === "LATIN_TO_CYRILLIC"
+          ? latinToCyrillic(ctx.message.text)
+          : cyrillicToLatin(ctx.message.text);
 
       await ctx.reply(converted);
     } catch (error) {
       console.error("Error handling text message:", error);
-      await ctx.reply("Kechirasiz, matningizni konvertatsiya qilishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.");
+      await ctx.reply(
+        "Kechirasiz, matningizni konvertatsiya qilishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring."
+      );
     }
   });
 }
