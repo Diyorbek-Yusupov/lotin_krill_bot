@@ -1,5 +1,7 @@
-node_modules
-dist
+node_modules/
+dist/
 .env
 .user_modes.json
 .idea
+.vercel
+credentials.json

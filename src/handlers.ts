@@ -1,7 +1,7 @@
 import { Bot, InlineKeyboard, Keyboard } from "grammy";
 import { setUserMode, getUserMode } from "./storage";
 import { latinToCyrillic, cyrillicToLatin } from "./utils/converter";
-import { MyContext } from "./types";
+import { MyContext, Mode } from "./types";
 
 export function registerHandlers(bot: Bot<MyContext>) {
   // Error handler
@@ -58,28 +58,33 @@ export function registerHandlers(bot: Bot<MyContext>) {
   // /start command
   bot.command("start", async (ctx) => {
     try {
-      if (!ctx.from?.id) {
-        await ctx.reply("Kechirasiz, foydalanuvchi ID raqamingizni aniqlay olmadim.");
+      if (!ctx.from) {
         return;
       }
 
-      // Check existing mode
-      const existingMode = await getUserMode(bot, ctx.from.id);
-      ctx.session.mode = existingMode;  // Sync session with storage
+      const existingMode = await getUserMode(bot, ctx.from.id);  // Use bot parameter instead of ctx.bot
+      
+      if (existingMode) {
+        ctx.session.mode = existingMode;
+        const modeName = existingMode === "LATIN_TO_CYRILLIC" ? "Lotin → Kirill" : "Kirill → Lotin";
+        await ctx.reply(`Sizning joriy rejimingiz: ${modeName}\nMatn yuborishingiz mumkin!`, {
+          reply_markup: new Keyboard()
+            .text(existingMode === "LATIN_TO_CYRILLIC" ? "Lotincha yozishga o'tish ⇄" : "Kirillcha yozishga o'tish ⇄")
+            .resized()
+        });
+        return;
+      }
 
       const inlineKeyboard = new InlineKeyboard()
         .text("Lotin → Kirill", "set_lc")
         .text("Kirill → Lotin", "set_cl");
 
-      // Include a welcome message for new users
-      const welcomeMsg = existingMode
-        ? "Yangi rejimni tanlang:"
-        : "Assalomu alaykum! 👋 Konvertatsiya rejimini tanlang:";
-
-      await ctx.reply(welcomeMsg, { reply_markup: inlineKeyboard });
+      await ctx.reply("Assalomu alaykum! 👋 Konvertatsiya rejimini tanlang:", {
+        reply_markup: inlineKeyboard,
+      });
     } catch (error) {
       console.error("Error in start command:", error);
-      await ctx.reply("Sorry, there was an error. Please try again.");
+      await ctx.reply("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.");
     }
   });
 
@@ -210,10 +215,21 @@ export function registerHandlers(bot: Bot<MyContext>) {
   // Handle text messages
   bot.on("message:text", async (ctx) => {
     try {
-      // Ignore /start and /mode commands
+      if (!ctx.from) {
+        return;
+      }
+
+      // Ignore commands
       if (ctx.message.text.startsWith("/")) return;
 
-      const mode = ctx.session.mode;
+      // Get mode from storage if session is empty
+      let mode = ctx.session.mode;
+      if (!mode) {
+        mode = await getUserMode(bot, ctx.from.id);  // Use bot parameter instead of ctx.bot
+        if (mode) {
+          ctx.session.mode = mode;
+        }
+      }
 
       if (!mode) {
         const keyboard = new InlineKeyboard()
@@ -226,17 +242,14 @@ export function registerHandlers(bot: Bot<MyContext>) {
         return;
       }
 
-      const converted =
-        mode === "LATIN_TO_CYRILLIC"
-          ? latinToCyrillic(ctx.message.text)
-          : cyrillicToLatin(ctx.message.text);
+      const converted = mode === "LATIN_TO_CYRILLIC"
+        ? latinToCyrillic(ctx.message.text)
+        : cyrillicToLatin(ctx.message.text);
 
       await ctx.reply(converted);
     } catch (error) {
       console.error("Error handling text message:", error);
-      await ctx.reply(
-        "Kechirasiz, matningizni konvertatsiya qilishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring."
-      );
+      await ctx.reply("Kechirasiz, matningizni konvertatsiya qilishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.");
     }
   });
 }
