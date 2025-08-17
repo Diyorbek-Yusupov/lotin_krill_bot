@@ -1,29 +1,31 @@
 import { Bot, session } from "grammy";
+import { MyContext, Mode } from "./types";
 import { BOT_TOKEN } from "./config";
 import { registerHandlers } from "./handlers";
-import { initializeBot } from "./storage";
-import { MyContext, SessionData } from "./types";
+import { initializeBot as initializeStorage } from "./storage";
 
-function initialSession(): SessionData {
-  return { mode: null };
-}
+export async function initializeBot() {
+  console.log("🤖 Initializing bot...");
 
-export async function createBot() {
   const bot = new Bot<MyContext>(BOT_TOKEN);
-  
-  // Set up session middleware
-  bot.use(session({ initial: initialSession }));
 
-  // Initialize bot with channel storage
-  await initializeBot(bot);
+  bot.use(
+    session({
+      initial: () => ({ mode: null as Mode | null }),
+    })
+  );
+
+  // Initialize storage using the exported function
+  await initializeStorage(bot);
 
   // Register all handlers
   registerHandlers(bot);
 
-  // Add error handler
+  // Error handling
   bot.catch((err) => {
-    console.error("Error in bot:", err);
+    console.error("❌ Bot error:", err);
   });
 
+  console.log("✅ Bot initialized successfully!");
   return bot;
 }
