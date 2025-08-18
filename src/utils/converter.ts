@@ -13,7 +13,6 @@ export function latinToCyrillic(text: string): string {
     // 'ts' digraph for loanwords (e.g., 'sement' -> 'цемент').
     // The letter 'c' was also used for this sound in older Latin versions.
     [/ts/gi, (m: string) => (m === "TS" || m === "Ts" ? "Ц" : "ц")],
-    [/c/gi, (m: string) => (m === "C" ? "Ц" : "ц")],
 
     // Vowel combinations with 'Y'. These must be processed before the single 'y' rule.
     // Handles cases like 'Yevropa', 'yoz', 'yulduz', 'yaxshi'.
@@ -44,10 +43,7 @@ export function latinToCyrillic(text: string): string {
     [/g['’ʻ`‘]/gi, (m: string) => (m[0] === "G" ? "Ғ" : "ғ")],
 
     // Stop sign (glottal stop) represented by various apostrophes, converted to hard sign.
-    [
-      /(\p{L})(['’ʻ`‘])(?=\p{L})/gu,
-      (match, p1: string) => p1 + (p1.toUpperCase() === p1 ? "Ъ" : "ъ"),
-    ],
+    [/(\p{L})(['’ʻ`‘])(?=\p{L})/gu, (match, p1: string) => p1 + "ъ"],
 
     //
     // === Context-sensitive 'e' rules ===
