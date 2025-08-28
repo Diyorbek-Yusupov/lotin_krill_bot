@@ -1,6 +1,6 @@
 # Lotin-Krill Telegram Bot
 
-A Telegram bot that helps users convert text between Latin (Lotin) and Cyrillic (Krill) scripts. Built with Grammy.js and TypeScript, featuring a serverless architecture that can be deployed for **completely free** on Vercel's hobby tier. The serverless design ensures high availability and zero server maintenance.
+A Telegram bot that helps users convert text between Latin (Lotin) and Cyrillic (Krill) scripts. Built with Grammy.js and TypeScript, featuring a serverless architecture that can be deployed for **completely free** on Vercel's hobby tier. The serverless design ensures high availability and zero server maintenance. Demo: [@lotin_kill_konverter_bot](https://t.me/lotin_kill_konverter_bot)
 
 ## 🚀 Features
 
